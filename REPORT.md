@@ -29,14 +29,10 @@ Model score	|Số “tin” của model; không phải điểm chất lượng n
 **Mở file:** `day1_lab_outputs/classification_predictions.json` và `visuals/classification_top5.png`.  
 Chỉ dùng ảnh `sample_id = traffic`, lấy dòng `rank = 1`.
 
-1. 
--- Record hạng 1: `class_id`=468 ; `class_name`=cab ; `rank`=1 ; `score`=0.510915 ; `taxonomy_name`=ImageNet-1K.
-2. 
--- Record này nói về **cả bức ảnh**:Record chỉ có rank, class_name, score, không có tọa độ (bbox) hay polygon, nên không chỉ vào vật nào. Model nhìn toàn khung hình rồi xếp hạng các lớp, trong khi ảnh có rất nhiều xe buýt, ô tô và người. Đây là “đơn vị nhãn = cả ảnh”.
-3.
--- Class list từ đâu ra? Từ taxonomy đi kèm checkpoint. yolo11n-cls.pt đã được huấn luyện trên ImageNet-1K (1000 lớp cố định), nên nó chỉ chọn được trong danh sách đó. Model không “nghĩ ra” tên lớp mới. Vì vậy mới có chuyện ảnh giao thông mà top-5 toàn là loại xe (cab, minibus, police_van, recreational_vehicle, streetcar): không có lớp nào là “cảnh đường phố”.
-4. 
--- Vì sao ghi cả class_id, class_name, taxonomy_name? Mỗi trường có một việc:
+1. -- Record hạng 1: `class_id`=468 ; `class_name`=cab ; `rank`=1 ; `score`=0.510915 ; `taxonomy_name`=ImageNet-1K.
+2. -- Record này nói về **cả bức ảnh**:Record chỉ có rank, class_name, score, không có tọa độ (bbox) hay polygon, nên không chỉ vào vật nào. Model nhìn toàn khung hình rồi xếp hạng các lớp, trong khi ảnh có rất nhiều xe buýt, ô tô và người. Đây là “đơn vị nhãn = cả ảnh”.
+3.-- Class list từ đâu ra? Từ taxonomy đi kèm checkpoint. yolo11n-cls.pt đã được huấn luyện trên ImageNet-1K (1000 lớp cố định), nên nó chỉ chọn được trong danh sách đó. Model không “nghĩ ra” tên lớp mới. Vì vậy mới có chuyện ảnh giao thông mà top-5 toàn là loại xe (cab, minibus, police_van, recreational_vehicle, streetcar): không có lớp nào là “cảnh đường phố”.
+4. -- Vì sao ghi cả class_id, class_name, taxonomy_name? Mỗi trường có một việc:
 
 ++ class_id là số để máy xử lý, ổn định.
 ++ class_name là tên để người đọc.
