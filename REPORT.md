@@ -33,16 +33,12 @@ Chỉ dùng ảnh `sample_id = traffic`, lấy dòng `rank = 1`.
 2. -- Record này nói về **cả bức ảnh**:Record chỉ có rank, class_name, score, không có tọa độ (bbox) hay polygon, nên không chỉ vào vật nào. Model nhìn toàn khung hình rồi xếp hạng các lớp, trong khi ảnh có rất nhiều xe buýt, ô tô và người. Đây là “đơn vị nhãn = cả ảnh”.
 3.-- Class list từ đâu ra? Từ taxonomy đi kèm checkpoint. yolo11n-cls.pt đã được huấn luyện trên ImageNet-1K (1000 lớp cố định), nên nó chỉ chọn được trong danh sách đó. Model không “nghĩ ra” tên lớp mới. Vì vậy mới có chuyện ảnh giao thông mà top-5 toàn là loại xe (cab, minibus, police_van, recreational_vehicle, streetcar): không có lớp nào là “cảnh đường phố”.
 4. -- Vì sao ghi cả class_id, class_name, taxonomy_name? Mỗi trường có một việc:
-
 ++ class_id là số để máy xử lý, ổn định.
 ++ class_name là tên để người đọc.
 ++ taxonomy_name cho biết số và tên đó thuộc bộ lớp nào.
-
 Chỉ ghi tên lớp thì dễ nhầm, vì cùng một ID có thể là lớp khác ở taxonomy khác. Ví dụ trong lab: ID 468 là cab ở ImageNet-1K, nhưng ở detection (COCO-80) ID 5 là bus và ID 2 là car.
-5.
--- Cần nói rõ tiêu chí chọn đúng một lớp, ví dụ chọn vật chiếm diện tích lớn nhất, chủ đề chính của cảnh, hoặc thứ tự ưu tiên giữa các lớp. Cũng cần nói khi nào không lớp nào khớp thì làm gì (hỏi lại, hay dùng nhãn “khác”). Ảnh traffic có xe buýt xanh, ô tô, người đi bộ. Không có quy tắc thì annotator A chọn “bus”, annotator B chọn “car”, và nhãn không thống nhất. 
-6. 
--- Vì score là độ tin của model, không do người kiểm tra theo guideline. Ground truth là nhãn do người gán theo quy tắc, rồi được reviewer kiểm tra. Ví dụ trong ảnh này, model tự tin 0.51 là cab trong khi ảnh chủ yếu là xe buýt và ô tô. Model có thể tự tin mà vẫn sai, hoặc đúng mà score thấp. Prediction sai không làm bài kém đi, mà còn là evidence tốt.
+5.-- Cần nói rõ tiêu chí chọn đúng một lớp, ví dụ chọn vật chiếm diện tích lớn nhất, chủ đề chính của cảnh, hoặc thứ tự ưu tiên giữa các lớp. Cũng cần nói khi nào không lớp nào khớp thì làm gì (hỏi lại, hay dùng nhãn “khác”). Ảnh traffic có xe buýt xanh, ô tô, người đi bộ. Không có quy tắc thì annotator A chọn “bus”, annotator B chọn “car”, và nhãn không thống nhất. 
+6. -- Vì score là độ tin của model, không do người kiểm tra theo guideline. Ground truth là nhãn do người gán theo quy tắc, rồi được reviewer kiểm tra. Ví dụ trong ảnh này, model tự tin 0.51 là cab trong khi ảnh chủ yếu là xe buýt và ô tô. Model có thể tự tin mà vẫn sai, hoặc đúng mà score thấp. Prediction sai không làm bài kém đi, mà còn là evidence tốt.
 
 ## 2. Phát hiện vật thể
 
@@ -50,32 +46,22 @@ Chỉ ghi tên lớp thì dễ nhầm, vì cùng một ID có thể là lớp kh
 Chỉ dùng ảnh `sample_id = kitchen`. Chọn **một** record.  
 Số lượng prediction theo ngưỡng: xem output ô so sánh `0.20` / `0.35` / `0.60` trong notebook.
 
-1.
--- Chọn Record: `class_name`=person ; `score`=0.912625 ; `bbox_xyxy`=[385.33, 69.24, 498.92, 348.92] ; `bbox_width`=113.58 ; `bbox_height`=279.68
-2. 
-++ xyxy nghĩa là [x_min, y_min, x_max, y_max], đơn vị pixel, gốc (0, 0) ở góc trên-trái ảnh. x tăng sang phải, y tăng xuống dưới.
+1.-- Chọn Record: `class_name`=person ; `score`=0.912625 ; `bbox_xyxy`=[385.33, 69.24, 498.92, 348.92] ; `bbox_width`=113.58 ; `bbox_height`=279.68
+2. ++ xyxy nghĩa là [x_min, y_min, x_max, y_max], đơn vị pixel, gốc (0, 0) ở góc trên-trái ảnh. x tăng sang phải, y tăng xuống dưới.
 ++ Góc trên-trái của hộp ở (385.33, 69.24): cách mép trái ảnh khoảng 385 px, cách mép trên khoảng 69 px.
 ++ Góc dưới-phải ở (498.92, 348.92).
 ++ Rộng = 498.92 − 385.33 ≈ 113.6 px (JSON ghi 113.58 vì làm tròn từ số gốc). Cao = 348.92 − 69.24 = 279.68 px.
 ++ Hộp cao gần 2,5 lần bề rộng, khớp với người đàn ông đứng quay lưng ở bên phải ảnh.
-3.
--- Số prediction theo ngưỡng:
-
+3.-- Số prediction theo ngưỡng:
 ++ 0.20 → 17 prediction.
 ++ 0.35 → 11 prediction (ngưỡng dùng cho JSON).
 ++ 0.60 → 6 prediction.
-
 -- score_threshold (ngưỡng conf) là mức tối thiểu để model giữ lại một prediction. Hạ ngưỡng thì giữ nhiều hộp hơn, nâng ngưỡng thì loại bớt. 
-4. 
--- Hạ ngưỡng thì reviewer phải làm thêm gì? Phải xem thêm nhiều hộp hơn, và các hộp thêm đều có score thấp nên dễ sai. So 0.20 với 0.35, thêm 6 hộp (spoon ×3, potted plant, dining table, bottle). Với mỗi hộp, reviewer kiểm tra lớp có đúng không, hộp có sát vật không, có hộp thừa hay trùng không. Ngược lại, nâng ngưỡng lên 0.60 thì mất 5 vật thật vẫn thấy trong ảnh (3 bowl, 2 cup). Nên ngưỡng chỉ lọc prediction, không phải quy tắc “vật nào cần gán nhãn”.
-5. 
--- Quy tắc box (áp dụng cho nhiều ảnh): Mỗi vật thể nhìn thấy được có đúng một hộp ôm sát phần nhìn thấy của vật. Không để dư nền, không gộp hai vật tách rời vào một hộp. Vật bị che hoặc bị cắt mép ảnh thì chỉ ôm phần nhìn thấy. Quy tắc tốt là quy tắc không nhắc tên ảnh hay vật cụ thể.
-6. 
---Vật bị che/cắt mép và chọn guideline hay escalation: Trên kitchen, có một person bị cắt ở mép trái ảnh (score 0.610931, box [0.12, 263.18, 61.55, 310.78]), chỉ thấy cánh tay thò vào khung hình.
-
+4. -- Hạ ngưỡng thì reviewer phải làm thêm gì? Phải xem thêm nhiều hộp hơn, và các hộp thêm đều có score thấp nên dễ sai. So 0.20 với 0.35, thêm 6 hộp (spoon ×3, potted plant, dining table, bottle). Với mỗi hộp, reviewer kiểm tra lớp có đúng không, hộp có sát vật không, có hộp thừa hay trùng không. Ngược lại, nâng ngưỡng lên 0.60 thì mất 5 vật thật vẫn thấy trong ảnh (3 bowl, 2 cup). Nên ngưỡng chỉ lọc prediction, không phải quy tắc “vật nào cần gán nhãn”.
+5. -- Quy tắc box (áp dụng cho nhiều ảnh): Mỗi vật thể nhìn thấy được có đúng một hộp ôm sát phần nhìn thấy của vật. Không để dư nền, không gộp hai vật tách rời vào một hộp. Vật bị che hoặc bị cắt mép ảnh thì chỉ ôm phần nhìn thấy. Quy tắc tốt là quy tắc không nhắc tên ảnh hay vật cụ thể.
+6. --Vật bị che/cắt mép và chọn guideline hay escalation: Trên kitchen, có một person bị cắt ở mép trái ảnh (score 0.610931, box [0.12, 263.18, 61.55, 310.78]), chỉ thấy cánh tay thò vào khung hình.
 ++ Cách vẽ box cho vật bị cắt mép (chỉ ôm phần nhìn thấy) là guideline, vì áp dụng được cho mọi ảnh.
 ++ Còn phần nhìn thấy nhỏ đến mức nào thì vẫn gán person (chỉ một cánh tay có tính không?) guideline chưa quy định. Đó là ca escalation: hỏi Lab Coach, không tự quyết.
-
 -- Nguyên tắc chung: ca nào quy tắc đã phủ thì làm theo guideline, ca nào không đủ thông tin hoặc guideline chưa nói thì hỏi, không tự bịa.
 
 ## 3. Phân đoạn theo từng đối tượng
@@ -83,20 +69,13 @@ Số lượng prediction theo ngưỡng: xem output ô so sánh `0.20` / `0.35` 
 **Mở file:** `day1_lab_outputs/segmentation_predictions.json` và `visuals/segmentation_prediction.png`.  
 Chỉ dùng ảnh `sample_id = kitchen`. Chọn **một** record.
 
-1. 
--- Record chọn: instance_id=kitchen-001, class_name=person, score=0.899318, polygon_point_count=348, 5 điểm đầu của polygon_xy = [[446.0, 70.0], [445.0, 71.0], [444.0, 71.0], [443.0, 72.0], [442.0, 72.0]]. Mỗi điểm là một cặp [x, y] theo pixel, nối lại theo thứ tự thành đường viền của vật.
-2.
--- Polygon cho thêm gì so với box? Box chỉ là hình chữ nhật 4 số (ở đây [385.45, 66.44, 498.02, 348.58]) nên chứa cả nền xung quanh người. Polygon 348 điểm bám theo viền thật: đầu, vai, tay chống hông, thân, hai chân. Nhờ đó biết được hình dạng và phần nền nằm trong hộp nhưng không thuộc người (ví dụ khoảng trống giữa hai chân).
-3.
--- instance_id dùng để làm gì? Để phân biệt từng vật riêng trong output của lab. Trong kitchen, kitchen-002, -003, -006, -010 đều là bowl nhưng là bốn instance khác nhau, mỗi cái một polygon. Câu “không phải class ID và không phải tracking ID” nghĩa là:
-
+1. -- Record chọn: instance_id=kitchen-001, class_name=person, score=0.899318, polygon_point_count=348, 5 điểm đầu của polygon_xy = [[446.0, 70.0], [445.0, 71.0], [444.0, 71.0], [443.0, 72.0], [442.0, 72.0]]. Mỗi điểm là một cặp [x, y] theo pixel, nối lại theo thứ tự thành đường viền của vật.
+2.-- Polygon cho thêm gì so với box? Box chỉ là hình chữ nhật 4 số (ở đây [385.45, 66.44, 498.02, 348.58]) nên chứa cả nền xung quanh người. Polygon 348 điểm bám theo viền thật: đầu, vai, tay chống hông, thân, hai chân. Nhờ đó biết được hình dạng và phần nền nằm trong hộp nhưng không thuộc người (ví dụ khoảng trống giữa hai chân).
+3.-- instance_id dùng để làm gì? Để phân biệt từng vật riêng trong output của lab. Trong kitchen, kitchen-002, -003, -006, -010 đều là bowl nhưng là bốn instance khác nhau, mỗi cái một polygon. Câu “không phải class ID và không phải tracking ID” nghĩa là:
 ++ Class ID là mã loại vật (như person=0, bus=5). Nhiều vật cùng loại dùng chung một class ID, còn instance_id thì mỗi vật một mã.
 ++ Tracking ID theo dõi cùng một vật qua nhiều khung hình video. Đây chỉ là một ảnh tĩnh, kitchen-001 chỉ là số thứ tự trong output này, không có nghĩa gì ngoài file đó.
-4. 
--- Quy tắc vẽ biên mask: Polygon bám sát đường viền phần nhìn thấy của vật, không lẫn nền hay vật khác. Vùng bị vật đứng trước che thì thuộc vật đứng trước. Hai vật cùng lớp chạm nhau thì vẽ hai polygon riêng.
-5.
--- Chỗ khó trên kitchen: Góc dưới-trái có mask oven (kitchen-007), dining table (kitchen-005), person (kitchen-009) và nhiều bowl chồng lên nhau; mặt bàn còn bị bát, lọ che từng phần.
-
+4. -- Quy tắc vẽ biên mask: Polygon bám sát đường viền phần nhìn thấy của vật, không lẫn nền hay vật khác. Vùng bị vật đứng trước che thì thuộc vật đứng trước. Hai vật cùng lớp chạm nhau thì vẽ hai polygon riêng.
+5. -- Chỗ khó trên kitchen: Góc dưới-trái có mask oven (kitchen-007), dining table (kitchen-005), person (kitchen-009) và nhiều bowl chồng lên nhau; mặt bàn còn bị bát, lọ che từng phần.
 ++ Cách xử lý vật chồng nhau (“pixel thuộc vật đứng trước”) là guideline.
 ++ Vùng tối phía sau bàn có phải oven hay không (nhìn giống bếp lò có lửa hơn) là câu guideline chưa phủ, nên escalation.
 
